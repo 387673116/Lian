@@ -1,50 +1,37 @@
-name: Update V2Ray Subscription
+import requests
+import base64
+import subprocess
 
-on:
-  schedule:
-    - cron: '0 2 * * *'  # 每天 2:00 执行
-  workflow_dispatch:  # 允许手动触发
+# 定义链接
+links = [
+    "https://raw.githubusercontent.com/wuqb2i4f/xray-config-toolkit/main/output/base64/mix",
+    "https://raw.githubusercontent.com/yebekhe/TelegramV2rayCollector/main/sub/base64/mix",
+    "https://raw.githubusercontent.com/mfuu/v2ray/master/v2ray",
+    "https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/Eternity",
+    "https://raw.githubusercontent.com/Leon406/SubCrawler/master/sub/share/vless",
+    "https://raw.githubusercontent.com/a2470982985/getNode/main/v2ray.txt",
+]
 
-permissions:
-  contents: write  # 确保有推送权限
+# 创建一个空的最终文件
+output_file = 'json/v2ray'
+with open(output_file, 'w') as f:
+    for link in links:
+        response = requests.get(link)
+        if response.status_code == 200:
+            try:
+                # Base64 解码
+                content = base64.b64decode(response.text).decode('utf-8')
+                # 逐行处理
+                for line in content.splitlines():
+                    # 提取地址并 ping 通
+                    address = line.split('://')[1].split(':')[0]  # 提取地址
+                    try:
+                        # 检查地址是否可 ping 通
+                        subprocess.run(['ping', '-c', '1', address], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        f.write(line + '\n')  # 如果 ping 通，写入文件
+                    except Exception as e:
+                        print(f"Ping failed for {address}: {e}")
+            except Exception as e:
+                print(f"Failed to decode content from {link}: {e}")
 
-jobs:
-  update_v2ray:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # 确保检出完整历史
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
-      - name: Install dependencies
-        run: pip install requests
-
-      - name: Run process_v2ray.py
-        run: |
-          python python/process_v2ray.py  # 确保替换为您的脚本路径
-
-      - name: Check if v2ray file was updated
-        run: |
-          if git diff --exit-code json/v2ray; then
-            echo "No changes to json/v2ray"
-            echo "changed=false" >> $GITHUB_ENV  # 使用环境文件设置输出变量
-          else
-            echo "Changes detected in json/v2ray"
-            echo "changed=true" >> $GITHUB_ENV
-          fi
-
-      - name: Commit and push changes
-        if: env.changed == 'true'
-        run: |
-          git config user.name "GitHub Action"
-          git config user.email "action@github.com"
-          git add json/v2ray
-          git commit -m 'Update V2Ray subscription file' || echo "No changes to commit."
-          git push origin main || echo "Push failed; may be due to permissions or branch protection."
+print(f"V2Ray subscription file updated at {output_file}")
