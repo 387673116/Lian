@@ -1,39 +1,34 @@
-name: Update V2Ray Subscription
+name: V2Ray Subscription Update
 
 on:
   schedule:
     - cron: '0 2 * * *'  # 每天2点执行
   workflow_dispatch:  # 允许手动触发
 
-permissions:
-  contents: write  # 确保有推送权限
-
 jobs:
-  update:
+  update-subscription:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # 确保检出完整历史
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          python-version: 'latest'  # 使用最新版的Python
 
       - name: Install dependencies
-        run: pip install requests
-
-      - name: Run script to process V2Ray links
         run: |
-          python scripts/process_v2ray.py  # 确保替换为你的 Python 脚本名称
+          python -m pip install --upgrade pip  # 更新pip到最新版本
+          pip install --upgrade requests  # 更新requests到最新版本
 
-      - name: Check if changes were made
+      - name: Run subscription script
+        run: python Scripts/V2Ray.py  # 使用你的Python脚本名
+
+      - name: Commit and push changes
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "github-actions@github.com"
-          git add json/v2ray
-          git diff-index --quiet HEAD -- || git commit -m 'Update V2Ray subscription file'
-          git push origin main || echo "No changes to push."
+          git config --local user.email "387673116@qq.com"
+          git config --local user.name "387673116"
+          git add V2Ray_subscriptions.txt
+          git commit -m "Update V2Ray subscriptions" || echo "No changes to commit"
+          git push
