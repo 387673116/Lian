@@ -10,20 +10,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3  # 使用最新的 checkout 版本
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4  # 使用最新的 Python 设置版本
         with:
-          python-version: 'latest'  # 使用最新版的Python
+          python-version: '3.x'  # 可以指定为最新的 Python 3.x 版本
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip  # 更新pip到最新版本
-          pip install --upgrade requests  # 更新requests到最新版本
+          python -m pip install --upgrade pip  # 更新 pip 到最新版本
+          pip install --upgrade requests  # 更新 requests 到最新版本
 
       - name: Run subscription script
-        run: python Scripts/V2Ray.py  # 使用你的Python脚本名
+        run: python Scripts/V2Ray.py  # 使用你的 Python 脚本名
 
       - name: Commit and push changes
         run: |
