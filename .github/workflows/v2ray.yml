@@ -38,6 +38,7 @@ jobs:
 
           for link in "${links[@]}"; do
             # 获取内容并解码
+            echo "Fetching and decoding $link..."
             content=$(curl -s "$link" | base64 --decode 2>/dev/null)
             if [ $? -ne 0 ]; then
               echo "Failed to decode content from $link"
@@ -55,8 +56,13 @@ jobs:
           while read -r line; do
             # 提取地址
             address=$(echo "$line" | grep -oP '(?<=://).*?(?=:)')
-            if [ -n "$address" ] && ping -c 1 "$address" &> /dev/null; then
-              echo "$line" >> "$output_file"  # 如果 ping 通，写入文件
+            if [ -n "$address" ]; then
+              echo "Pinging $address..."
+              if ping -c 1 "$address" &> /dev/null; then
+                echo "$line" >> "$output_file"  # 如果 ping 通，写入文件
+              else
+                echo "$address is unreachable."
+              fi
             fi
           done < "$temp_file"
 
