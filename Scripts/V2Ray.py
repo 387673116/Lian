@@ -20,7 +20,6 @@ def fetch_and_decode_urls(urls):
     for url in urls:
         response = requests.get(url)
         if response.status_code == 200:
-            # 逐行处理返回的内容
             decoded_content = response.text.strip().splitlines()
             for line in decoded_content:
                 # 先检查是否是有效的 Base64 编码
@@ -63,31 +62,25 @@ def parse_vless(config):
 
 def parse_ss(config):
     decoded_bytes = base64.b64decode(config[5:])  # 去掉前缀 "ss://"
-    # 解析逻辑，返回对应的字典
     return parse_ss_json(decoded_bytes)
 
 def parse_ss_json(decoded_bytes):
     # 此处实现 SS 的解析逻辑
-    # 示例：直接返回一个字典（需根据实际需要修改）
     return {"add": "example.com", "port": "8080"}  # 示例 IP
 
 def parse_ssr(config):
     decoded_bytes = base64.b64decode(config[5:])  # 去掉前缀 "ssr://"
-    # 解析逻辑，返回对应的字典
     return parse_ssr_json(decoded_bytes)
 
 def parse_ssr_json(decoded_bytes):
-    # 此处实现 SSR 的解析逻辑
     return {"add": "example.com", "port": "8080"}  # 示例 IP
 
 def parse_trojan(config):
     decoded_bytes = base64.b64decode(config[8:])  # 去掉前缀 "trojan://"
-    # 实现解析逻辑，返回对应的字典
     return {"add": "example.com", "port": "443"}  # 示例 IP
 
 def get_ip_or_host(config):
     if config:
-        # 从配置中获取 IP 或域名
         if "add" in config:
             return config["add"]
         elif "host" in config:
@@ -97,37 +90,34 @@ def get_ip_or_host(config):
 def check_ping(host):
     try:
         result = subprocess.run(
-            ["ping", "-c", "1", "-W", "2", host],  # 对于 Windows 可以改成 ["ping", "-n", "1", host]
+            ["ping", "-c", "1", "-W", "2", host],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True  # 使输出为字符串而不是字节
+            text=True
         )
         return result.returncode == 0
     except Exception as e:
-        print(f"出现错误: {e}")  # 捕获并打印异常
+        print(f"出现错误: {e}")
         return False
 
 # 主逻辑
 if __name__ == "__main__":
-    # 创建 json 目录（如果不存在）
     os.makedirs("json", exist_ok=True)
 
-    # 获取并解码节点
     all_nodes = fetch_and_decode_urls(urls)
 
     reachable_configs = []
 
     for node in all_nodes:
-        config = parse_proxy(node)  # 使用新的解析函数
+        config = parse_proxy(node)
         ip_or_host = get_ip_or_host(config)
 
         if ip_or_host and check_ping(ip_or_host):
-            reachable_configs.append(node)  # 保留可达的配置
+            reachable_configs.append(node)
             print(f"可达的节点: {ip_or_host}")
         else:
             print(f"不可达的节点: {ip_or_host}")
 
-    # 将可达的节点保存到 json/V2Ray 文件
     with open("json/V2Ray", "w") as f:
         for node in reachable_configs:
             f.write(node + "\n")
