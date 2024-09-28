@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3  # 确保您使用的是最新版本
+        uses: actions/checkout@v3  # 使用最新版本
 
       - name: Set up Python
         uses: actions/setup-python@v4  # 使用最新版本
@@ -25,12 +25,23 @@ jobs:
       - name: Run process_v2ray.py
         run: python python/process_v2ray.py
 
-      - name: Commit and push changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 使用 GitHub Token
+      - name: Check for changes and commit if needed
+        id: commit_changes
         run: |
           git config --local user.name "GitHub Action"
           git config --local user.email "action@github.com"
           git add json/v2ray
-          git commit -m "Update V2Ray subscription file" || echo "No changes to commit"
+          if ! git diff-index --quiet HEAD --; then
+            git commit -m "Update V2Ray subscription file"
+            echo "Changes detected, committing."
+          else
+            echo "No changes to commit."
+            echo "::set-output name=changed::false"
+          fi
+
+      - name: Push changes
+        if: steps.commit_changes.outputs.changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
           git push origin main || echo "Push failed; may be due to permissions or branch protection."
