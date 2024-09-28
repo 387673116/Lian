@@ -1,40 +1,29 @@
-name: V2Ray Subscription Update
+name: Update V2Ray Subscription
 
 on:
   schedule:
-    - cron: '0 2 * * *'  # 每天的 2:00 AM 执行
+    - cron: '0 2 * * *'  # 每天 2:00 执行
   workflow_dispatch:  # 允许手动触发
 
 jobs:
-  update:
+  update_v2ray:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3  # 使用最新版本
+      - name: Checkout repository
+        uses: actions/checkout@v3  # 确保您使用的是最新版本
 
-      - name: Install Python
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3 python3-pip
+      - name: Set up Python
+        uses: actions/setup-python@v4  # 使用最新版本
+        with:
+          python-version: '3.8'
 
-      - name: Install requests
+      - name: Install dependencies
         run: |
-          pip3 install requests
+          python -m pip install --upgrade pip
+          pip install requests
 
-      - name: Run V2Ray processing script
-        run: |
-          python3 python/process_v2ray.py
-
-      - name: Compare files
-        run: |
-          if cmp -s json/v2ray json/v2ray.new; then
-            echo "Files are identical; no update needed."
-            exit 0
-          else
-            echo "Files differ; proceeding to update."
-            mv json/v2ray.new json/v2ray  # 用新文件替换旧文件
-          fi
+      - name: Run process_v2ray.py
+        run: python python/process_v2ray.py
 
       - name: Commit and push changes
         env:
