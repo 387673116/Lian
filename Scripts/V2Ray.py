@@ -55,17 +55,8 @@ def parse_vless(config):
         print(f"解析 vless 配置失败: {config.decode(errors='ignore')}，错误信息: {e}")
         return None
 
-def get_ip_or_host(config):
-    if config:
-        # 提取 IP 或域名
-        if "add" in config:
-            return config["add"]
-        elif "host" in config:
-            return config["host"]
-    return None
-
-def extract_ip(node):
-    match = re.search(r'@(.*?):', node.decode(errors='ignore'))
+def extract_host(node):
+    match = re.search(r'@([\w.-]+):', node.decode(errors='ignore'))
     return match.group(1) if match else None
 
 def check_ping(host):
@@ -86,26 +77,31 @@ if __name__ == "__main__":
     os.makedirs("json", exist_ok=True)
 
     all_nodes = fetch_and_decode_urls(urls)
-    reachable_ips = set()  # 使用集合来存储唯一的可达 IP
+    reachable_hosts = []
+    unreachable_hosts = []
 
     for node in all_nodes:
-        config = parse_proxy(node)
-
-        # 检查是否包含 '@'，如果不包含则直接剔除
         if b'@' not in node:
             print(f"剔除不包含 '@' 的节点: {node.decode(errors='ignore')}")
             continue
 
-        ip_or_host = extract_ip(node)
+        host = extract_host(node)
 
-        if ip_or_host and check_ping(ip_or_host):
-            reachable_ips.add(ip_or_host)  # 仅保留唯一的 IP
-            print(f"可达的节点: {ip_or_host}")
-        else:
-            print(f"不可达的节点: {ip_or_host}")
+        if host:
+            if check_ping(host):
+                reachable_hosts.append(host)
+                print(f"可达的节点: {host}")
+            else:
+                unreachable_hosts.append(host)
+                print(f"不可达的节点: {host}")
 
+    # 保存可达和不可达的节点
     with open("json/V2Ray", "w") as f:
-        for ip in reachable_ips:
-            f.write(ip + "\n")
+        f.write("可达的节点:\n")
+        for host in reachable_hosts:
+            f.write(host + "\n")
+        f.write("\n不可达的节点:\n")
+        for host in unreachable_hosts:
+            f.write(host + "\n")
 
-    print("可达的节点已保存到 'json/V2Ray'.")
+    print("可达和不可达的节点已保存到 'json/V2Ray'.")
