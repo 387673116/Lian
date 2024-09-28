@@ -37,9 +37,11 @@ jobs:
           fi
 
       - name: Commit and push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 使用 GitHub Token
         run: |
           git config --local user.name "GitHub Action"
           git config --local user.email "action@github.com"
           git add json/v2ray
           git commit -m "Update V2Ray subscription file" || echo "No changes to commit"
-          git push
+          git push origin main  # 推送更改
