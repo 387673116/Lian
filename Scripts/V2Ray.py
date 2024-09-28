@@ -53,31 +53,51 @@ def parse_proxy(config):
         return None
 
 def parse_vmess(config):
-    decoded_bytes = base64.b64decode(config[8:])  # 去掉前缀 "vmess://"
-    return json.loads(decoded_bytes.decode('utf-8'))
+    try:
+        decoded_bytes = base64.b64decode(config[8:])  # 去掉前缀 "vmess://"
+        return json.loads(decoded_bytes.decode('utf-8'))
+    except Exception as e:
+        print(f"解析 vmess 配置失败: {config}，错误信息: {e}")
+        return None
 
 def parse_vless(config):
-    decoded_bytes = base64.b64decode(config[8:])  # 去掉前缀 "vless://"
-    return json.loads(decoded_bytes.decode('utf-8'))
+    try:
+        decoded_bytes = base64.b64decode(config[8:])  # 去掉前缀 "vless://"
+        return json.loads(decoded_bytes.decode('utf-8'))
+    except Exception as e:
+        print(f"解析 vless 配置失败: {config}，错误信息: {e}")
+        return None
 
 def parse_ss(config):
-    decoded_bytes = base64.b64decode(config[5:])  # 去掉前缀 "ss://"
-    return parse_ss_json(decoded_bytes)
+    try:
+        decoded_bytes = base64.b64decode(config[5:])  # 去掉前缀 "ss://"
+        return parse_ss_json(decoded_bytes)
+    except Exception as e:
+        print(f"解析 ss 配置失败: {config}，错误信息: {e}")
+        return None
 
 def parse_ss_json(decoded_bytes):
     # 此处实现 SS 的解析逻辑
     return {"add": "example.com", "port": "8080"}  # 示例 IP
 
 def parse_ssr(config):
-    decoded_bytes = base64.b64decode(config[5:])  # 去掉前缀 "ssr://"
-    return parse_ssr_json(decoded_bytes)
+    try:
+        decoded_bytes = base64.b64decode(config[5:])  # 去掉前缀 "ssr://"
+        return parse_ssr_json(decoded_bytes)
+    except Exception as e:
+        print(f"解析 ssr 配置失败: {config}，错误信息: {e}")
+        return None
 
 def parse_ssr_json(decoded_bytes):
     return {"add": "example.com", "port": "8080"}  # 示例 IP
 
 def parse_trojan(config):
-    decoded_bytes = base64.b64decode(config[8:])  # 去掉前缀 "trojan://"
-    return {"add": "example.com", "port": "443"}  # 示例 IP
+    try:
+        decoded_bytes = base64.b64decode(config[8:])  # 去掉前缀 "trojan://"
+        return {"add": "example.com", "port": "443"}  # 示例 IP
+    except Exception as e:
+        print(f"解析 trojan 配置失败: {config}，错误信息: {e}")
+        return None
 
 def get_ip_or_host(config):
     if config:
