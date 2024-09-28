@@ -25,31 +25,30 @@ def fetch_and_decode_urls(urls):
                 # 先检查是否是有效的 Base64 编码
                 if is_base64(line):
                     try:
-                        decoded_line = base64.b64decode(line).decode('utf-8')
-                        decoded_nodes.append(decoded_line)
-                    except (ValueError, UnicodeDecodeError) as e:
+                        decoded_line = base64.b64decode(line)
+                        decoded_nodes.append(decoded_line)  # 保留原始字节数据
+                    except Exception as e:
                         print(f"解码失败: {line}，错误信息: {e}")
                 else:
                     print(f"跳过无效的 Base64 字符串: {line}")
     return decoded_nodes
 
 def is_base64(s):
-    # 检查字符串是否只包含有效的 Base64 字符
     return re.match(r'^[A-Za-z0-9+/=]+$', s) is not None
 
 def parse_proxy(config):
-    if config.startswith("vmess://"):
+    if config.startswith(b"vmess://"):
         return parse_vmess(config)
-    elif config.startswith("vless://"):
+    elif config.startswith(b"vless://"):
         return parse_vless(config)
-    elif config.startswith("ss://"):
+    elif config.startswith(b"ss://"):
         return parse_ss(config)
-    elif config.startswith("ssr://"):
+    elif config.startswith(b"ssr://"):
         return parse_ssr(config)
-    elif config.startswith("trojan://"):
+    elif config.startswith(b"trojan://"):
         return parse_trojan(config)
     else:
-        print(f"未知的协议: {config}")
+        print(f"未知的协议: {config.decode(errors='ignore')}")
         return None
 
 def parse_vmess(config):
@@ -57,7 +56,7 @@ def parse_vmess(config):
         decoded_bytes = base64.b64decode(config[8:])  # 去掉前缀 "vmess://"
         return json.loads(decoded_bytes.decode('utf-8'))
     except Exception as e:
-        print(f"解析 vmess 配置失败: {config}，错误信息: {e}")
+        print(f"解析 vmess 配置失败: {config.decode(errors='ignore')}，错误信息: {e}")
         return None
 
 def parse_vless(config):
@@ -65,7 +64,7 @@ def parse_vless(config):
         decoded_bytes = base64.b64decode(config[8:])  # 去掉前缀 "vless://"
         return json.loads(decoded_bytes.decode('utf-8'))
     except Exception as e:
-        print(f"解析 vless 配置失败: {config}，错误信息: {e}")
+        print(f"解析 vless 配置失败: {config.decode(errors='ignore')}，错误信息: {e}")
         return None
 
 def parse_ss(config):
@@ -73,11 +72,10 @@ def parse_ss(config):
         decoded_bytes = base64.b64decode(config[5:])  # 去掉前缀 "ss://"
         return parse_ss_json(decoded_bytes)
     except Exception as e:
-        print(f"解析 ss 配置失败: {config}，错误信息: {e}")
+        print(f"解析 ss 配置失败: {config.decode(errors='ignore')}，错误信息: {e}")
         return None
 
 def parse_ss_json(decoded_bytes):
-    # 此处实现 SS 的解析逻辑
     return {"add": "example.com", "port": "8080"}  # 示例 IP
 
 def parse_ssr(config):
@@ -85,7 +83,7 @@ def parse_ssr(config):
         decoded_bytes = base64.b64decode(config[5:])  # 去掉前缀 "ssr://"
         return parse_ssr_json(decoded_bytes)
     except Exception as e:
-        print(f"解析 ssr 配置失败: {config}，错误信息: {e}")
+        print(f"解析 ssr 配置失败: {config.decode(errors='ignore')}，错误信息: {e}")
         return None
 
 def parse_ssr_json(decoded_bytes):
@@ -96,7 +94,7 @@ def parse_trojan(config):
         decoded_bytes = base64.b64decode(config[8:])  # 去掉前缀 "trojan://"
         return {"add": "example.com", "port": "443"}  # 示例 IP
     except Exception as e:
-        print(f"解析 trojan 配置失败: {config}，错误信息: {e}")
+        print(f"解析 trojan 配置失败: {config.decode(errors='ignore')}，错误信息: {e}")
         return None
 
 def get_ip_or_host(config):
@@ -140,6 +138,6 @@ if __name__ == "__main__":
 
     with open("json/V2Ray", "w") as f:
         for node in reachable_configs:
-            f.write(node + "\n")
+            f.write(node.decode('utf-8') + "\n")  # 解码为字符串后写入文件
 
     print("可达的节点已保存到 'json/V2Ray'.")
