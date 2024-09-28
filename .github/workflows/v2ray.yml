@@ -5,44 +5,39 @@ on:
     - cron: '0 2 * * *'  # 每天 2:00 执行
   workflow_dispatch:  # 允许手动触发
 
+permissions:
+  contents: write  # 确保有推送权限
+
 jobs:
   update_v2ray:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3  # 使用最新版本
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 确保检出完整历史
 
       - name: Set up Python
-        uses: actions/setup-python@v4  # 使用最新版本
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.8'
+          python-version: '3.x'
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install requests
+        run: pip install requests
 
       - name: Run process_v2ray.py
-        run: python python/process_v2ray.py
-
-      - name: Check for changes and commit if needed
-        id: commit_changes
         run: |
-          git config --local user.name "GitHub Action"
-          git config --local user.email "action@github.com"
+          python python/process_v2ray.py  # 确保替换为您的脚本路径
+        continue-on-error: true  # 允许脚本失败以便查看详细日志
+
+      - name: Check v2ray file content
+        run: cat json/v2ray  # 确保 v2ray 文件存在并查看内容
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
           git add json/v2ray
-          if ! git diff-index --quiet HEAD --; then
-            git commit -m "Update V2Ray subscription file"
-            echo "Changes detected, committing."
-            echo "changed=true" >> $GITHUB_ENV  # 使用环境文件设置输出变量
-          else
-            echo "No changes to commit."
-            echo "changed=false" >> $GITHUB_ENV
-          fi
-
-      - name: Push changes
-        if: env.changed == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
+          git commit -m 'Update V2Ray subscription file' || echo "No changes to commit."
           git push origin main || echo "Push failed; may be due to permissions or branch protection."
