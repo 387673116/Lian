@@ -20,8 +20,13 @@ def fetch_and_decode_urls(urls):
         response = requests.get(url)
         if response.status_code == 200:
             # Base64 解码
-            decoded_content = base64.b64decode(response.text).decode('utf-8')
-            decoded_nodes.extend(decoded_content.splitlines())
+            decoded_content = response.text.strip().splitlines()
+            for line in decoded_content:
+                try:
+                    decoded_line = base64.b64decode(line).decode('utf-8')
+                    decoded_nodes.append(decoded_line)
+                except (ValueError, UnicodeDecodeError) as e:
+                    print(f"解码失败: {line}，错误: {e}")
     return decoded_nodes
 
 def parse_proxy(config):
@@ -35,7 +40,6 @@ def parse_proxy(config):
         return parse_ssr(config)
     elif config.startswith("trojan://"):
         return parse_trojan(config)
-    # 继续添加其他协议的解析
     else:
         print(f"未知的协议: {config}")
         return None
@@ -92,14 +96,14 @@ if __name__ == "__main__":
     os.makedirs("json", exist_ok=True)
 
     # 获取并解码节点
-    all_nodes = fetch_and_decode_urls(urls)  # 确保 this line initializes all_nodes
+    all_nodes = fetch_and_decode_urls(urls)
 
     reachable_configs = []
 
     for node in all_nodes:
         config = parse_proxy(node)  # 使用新的解析函数
         ip_or_host = get_ip_or_host(config)
-        
+
         if ip_or_host and check_ping(ip_or_host):
             reachable_configs.append(node)  # 保留可达的配置
             print(f"可达的节点: {ip_or_host}")
