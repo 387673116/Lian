@@ -5,14 +5,13 @@ import json
 import subprocess
 import re
 
-# 定义要获取内容的链接
+# 定义要获取内容的链接（去除了指定的链接）
 urls = [
     "https://raw.githubusercontent.com/wuqb2i4f/xray-config-toolkit/main/output/base64/mix",
     "https://raw.githubusercontent.com/yebekhe/TelegramV2rayCollector/main/sub/base64/mix",
     "https://raw.githubusercontent.com/mfuu/v2ray/master/v2ray",
     "https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/Eternity",
-    "https://raw.githubusercontent.com/Leon406/SubCrawler/master/sub/share/vless",
-    "https://raw.githubusercontent.com/a2470982985/getNode/main/v2ray.txt"
+    "https://raw.githubusercontent.com/Leon406/SubCrawler/master/sub/share/vless"
 ]
 
 def fetch_and_decode_urls(urls):
@@ -91,6 +90,12 @@ if __name__ == "__main__":
 
     for node in all_nodes:
         config = parse_proxy(node)
+
+        # 检查是否包含 '@'，如果不包含则直接剔除
+        if b'@' not in node:
+            print(f"剔除不包含 '@' 的节点: {node.decode(errors='ignore')}")
+            continue
+
         ip_or_host = extract_ip(node)
 
         if ip_or_host and check_ping(ip_or_host):
