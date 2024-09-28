@@ -50,14 +50,6 @@ def parse_proxy(config):
         print(f"未知的协议: {config.decode(errors='ignore')}")
         return None
 
-def parse_vmess(config):
-    try:
-        decoded_bytes = base64.b64decode(config[8:])
-        return json.loads(decoded_bytes.decode('utf-8'))
-    except Exception as e:
-        print(f"解析 vmess 配置失败: {config.decode(errors='ignore')}，错误信息: {e}")
-        return None
-
 def parse_vless(config):
     try:
         decoded_bytes = base64.b64decode(config[8:])
@@ -66,43 +58,18 @@ def parse_vless(config):
         print(f"解析 vless 配置失败: {config.decode(errors='ignore')}，错误信息: {e}")
         return None
 
-def parse_ss(config):
-    try:
-        decoded_bytes = base64.b64decode(config[5:])
-        return parse_ss_json(decoded_bytes)
-    except Exception as e:
-        print(f"解析 ss 配置失败: {config.decode(errors='ignore')}，错误信息: {e}")
-        return None
-
-def parse_ss_json(decoded_bytes):
-    return {"add": "example.com", "port": "8080"}  # 示例 IP
-
-def parse_ssr(config):
-    try:
-        decoded_bytes = base64.b64decode(config[5:])
-        return parse_ssr_json(decoded_bytes)
-    except Exception as e:
-        print(f"解析 ssr 配置失败: {config.decode(errors='ignore')}，错误信息: {e}")
-        return None
-
-def parse_ssr_json(decoded_bytes):
-    return {"add": "example.com", "port": "8080"}  # 示例 IP
-
-def parse_trojan(config):
-    try:
-        decoded_bytes = base64.b64decode(config[8:])
-        return {"add": "example.com", "port": "443"}  # 示例 IP
-    except Exception as e:
-        print(f"解析 trojan 配置失败: {config.decode(errors='ignore')}，错误信息: {e}")
-        return None
-
 def get_ip_or_host(config):
     if config:
+        # 提取 IP 或域名
         if "add" in config:
             return config["add"]
         elif "host" in config:
             return config["host"]
     return None
+
+def extract_ip(node):
+    match = re.search(r'@(.*?):', node.decode(errors='ignore'))
+    return match.group(1) if match else None
 
 def check_ping(host):
     try:
@@ -122,21 +89,20 @@ if __name__ == "__main__":
     os.makedirs("json", exist_ok=True)
 
     all_nodes = fetch_and_decode_urls(urls)
-
-    reachable_configs = []
+    reachable_ips = set()  # 使用集合来存储唯一的可达 IP
 
     for node in all_nodes:
         config = parse_proxy(node)
-        ip_or_host = get_ip_or_host(config)
+        ip_or_host = extract_ip(node)
 
         if ip_or_host and check_ping(ip_or_host):
-            reachable_configs.append(node)
+            reachable_ips.add(ip_or_host)  # 仅保留唯一的 IP
             print(f"可达的节点: {ip_or_host}")
         else:
             print(f"不可达的节点: {ip_or_host}")
 
     with open("json/V2Ray", "w") as f:
-        for node in reachable_configs:
-            f.write(node.decode('utf-8') + "\n")
+        for ip in reachable_ips:
+            f.write(ip + "\n")
 
     print("可达的节点已保存到 'json/V2Ray'.")
