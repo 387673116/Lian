@@ -36,9 +36,7 @@ def is_base64(s):
     return re.match(r'^[A-Za-z0-9+/=]+$', s) is not None
 
 def parse_proxy(config):
-    if config.startswith(b"vmess://"):
-        return parse_vmess(config)
-    elif config.startswith(b"vless://"):
+    if config.startswith(b"vless://"):
         return parse_vless(config)
     elif config.startswith(b"ss://"):
         return parse_ss(config)
