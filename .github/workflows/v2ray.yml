@@ -44,4 +44,4 @@ jobs:
           git config --local user.email "action@github.com"
           git add json/v2ray
           git commit -m "Update V2Ray subscription file" || echo "No changes to commit"
-          git push origin main  # 推送更改
+          git push origin main || echo "Push failed; may be due to permissions or branch protection."
