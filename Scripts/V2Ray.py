@@ -20,16 +20,16 @@ def fetch_and_decode_urls(urls):
     for url in urls:
         response = requests.get(url)
         if response.status_code == 200:
-            # Base64 解码
+            # 逐行处理返回的内容
             decoded_content = response.text.strip().splitlines()
             for line in decoded_content:
-                # 直接检查并跳过无效的 Base64 字符串
+                # 先检查是否是有效的 Base64 编码
                 if is_base64(line):
                     try:
                         decoded_line = base64.b64decode(line).decode('utf-8')
                         decoded_nodes.append(decoded_line)
-                    except (ValueError, UnicodeDecodeError) as e:
-                        print(f"解码失败: {line}，错误: {e}")
+                    except (ValueError, UnicodeDecodeError):
+                        print(f"解码失败: {line}")
                 else:
                     print(f"跳过无效的 Base64 字符串: {line}")
     return decoded_nodes
@@ -63,18 +63,27 @@ def parse_vless(config):
 
 def parse_ss(config):
     decoded_bytes = base64.b64decode(config[5:])  # 去掉前缀 "ss://"
-    # 实现解析逻辑
-    return None  # 返回解析结果
+    # 解析逻辑，返回对应的字典
+    return parse_ss_json(decoded_bytes)
+
+def parse_ss_json(decoded_bytes):
+    # 此处实现 SS 的解析逻辑
+    # 示例：直接返回一个字典（需根据实际需要修改）
+    return {"add": "example.com", "port": "8080"}  # 示例 IP
 
 def parse_ssr(config):
     decoded_bytes = base64.b64decode(config[5:])  # 去掉前缀 "ssr://"
-    # 实现解析逻辑
-    return None  # 返回解析结果
+    # 解析逻辑，返回对应的字典
+    return parse_ssr_json(decoded_bytes)
+
+def parse_ssr_json(decoded_bytes):
+    # 此处实现 SSR 的解析逻辑
+    return {"add": "example.com", "port": "8080"}  # 示例 IP
 
 def parse_trojan(config):
     decoded_bytes = base64.b64decode(config[8:])  # 去掉前缀 "trojan://"
-    # 实现解析逻辑
-    return None  # 返回解析结果
+    # 实现解析逻辑，返回对应的字典
+    return {"add": "example.com", "port": "443"}  # 示例 IP
 
 def get_ip_or_host(config):
     if config:
@@ -93,7 +102,6 @@ def check_ping(host):
             stderr=subprocess.PIPE,
             text=True  # 使输出为字符串而不是字节
         )
-        print(f"Ping 输出: {result.stdout}")  # 打印输出
         return result.returncode == 0
     except Exception as e:
         print(f"出现错误: {e}")  # 捕获并打印异常
