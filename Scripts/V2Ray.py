@@ -24,7 +24,7 @@ def fetch_and_decode_urls(urls):
                 if is_base64(line):
                     try:
                         decoded_line = base64.b64decode(line)
-                        decoded_nodes.append(decoded_line)
+                        decoded_nodes.append(decoded_line.decode('utf-8'))
                     except Exception as e:
                         print(f"解码失败: {line}，错误信息: {e}")
                 else:
@@ -34,29 +34,8 @@ def fetch_and_decode_urls(urls):
 def is_base64(s):
     return re.match(r'^[A-Za-z0-9+/=]+$', s) is not None
 
-def parse_proxy(config):
-    if config.startswith(b"vless://"):
-        return parse_vless(config)
-    elif config.startswith(b"ss://"):
-        return parse_ss(config)
-    elif config.startswith(b"ssr://"):
-        return parse_ssr(config)
-    elif config.startswith(b"trojan://"):
-        return parse_trojan(config)
-    else:
-        print(f"未知的协议: {config.decode(errors='ignore')}")
-        return None
-
-def parse_vless(config):
-    try:
-        decoded_bytes = base64.b64decode(config[8:])
-        return json.loads(decoded_bytes.decode('utf-8'))
-    except Exception as e:
-        print(f"解析 vless 配置失败: {config.decode(errors='ignore')}，错误信息: {e}")
-        return None
-
 def extract_host(node):
-    match = re.search(r'@([\w.-]+):', node.decode(errors='ignore'))
+    match = re.search(r'@([\w.-]+):', node)
     return match.group(1) if match else None
 
 def check_ping(host):
@@ -77,31 +56,31 @@ if __name__ == "__main__":
     os.makedirs("json", exist_ok=True)
 
     all_nodes = fetch_and_decode_urls(urls)
-    reachable_hosts = []
-    unreachable_hosts = []
+    reachable_nodes = []
+    unreachable_nodes = []
 
     for node in all_nodes:
-        if b'@' not in node:
-            print(f"剔除不包含 '@' 的节点: {node.decode(errors='ignore')}")
+        if '@' not in node:
+            print(f"剔除不包含 '@' 的节点: {node}")
             continue
 
         host = extract_host(node)
 
         if host:
             if check_ping(host):
-                reachable_hosts.append(host)
-                print(f"可达的节点: {host}")
+                reachable_nodes.append(node)
+                print(f"可达的节点: {node}")
             else:
-                unreachable_hosts.append(host)
-                print(f"不可达的节点: {host}")
+                unreachable_nodes.append(node)
+                print(f"不可达的节点: {node}")
 
     # 保存可达和不可达的节点
     with open("json/V2Ray", "w") as f:
         f.write("可达的节点:\n")
-        for host in reachable_hosts:
-            f.write(host + "\n")
+        for node in reachable_nodes:
+            f.write(node + "\n")
         f.write("\n不可达的节点:\n")
-        for host in unreachable_hosts:
-            f.write(host + "\n")
+        for node in unreachable_nodes:
+            f.write(node + "\n")
 
     print("可达和不可达的节点已保存到 'json/V2Ray'.")
