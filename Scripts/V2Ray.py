@@ -27,8 +27,8 @@ def fetch_and_decode_urls(urls):
                     try:
                         decoded_line = base64.b64decode(line).decode('utf-8')
                         decoded_nodes.append(decoded_line)
-                    except (ValueError, UnicodeDecodeError):
-                        print(f"解码失败: {line}")
+                    except (ValueError, UnicodeDecodeError) as e:
+                        print(f"解码失败: {line}，错误信息: {e}")
                 else:
                     print(f"跳过无效的 Base64 字符串: {line}")
     return decoded_nodes
