@@ -3,6 +3,7 @@ import requests
 import base64
 import json
 import subprocess
+import re
 
 # 定义要获取内容的链接
 urls = [
@@ -22,12 +23,20 @@ def fetch_and_decode_urls(urls):
             # Base64 解码
             decoded_content = response.text.strip().splitlines()
             for line in decoded_content:
-                try:
-                    decoded_line = base64.b64decode(line).decode('utf-8')
-                    decoded_nodes.append(decoded_line)
-                except (ValueError, UnicodeDecodeError) as e:
-                    print(f"解码失败: {line}，错误: {e}")
+                # 直接检查并跳过无效的 Base64 字符串
+                if is_base64(line):
+                    try:
+                        decoded_line = base64.b64decode(line).decode('utf-8')
+                        decoded_nodes.append(decoded_line)
+                    except (ValueError, UnicodeDecodeError) as e:
+                        print(f"解码失败: {line}，错误: {e}")
+                else:
+                    print(f"跳过无效的 Base64 字符串: {line}")
     return decoded_nodes
+
+def is_base64(s):
+    # 检查字符串是否只包含有效的 Base64 字符
+    return re.match(r'^[A-Za-z0-9+/=]+$', s) is not None
 
 def parse_proxy(config):
     if config.startswith("vmess://"):
