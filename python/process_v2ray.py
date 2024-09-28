@@ -1,37 +1,50 @@
-import base64
-import requests
-import subprocess
-import os
+name: Update V2Ray Subscription
 
-# 确保 json 目录存在
-os.makedirs('json', exist_ok=True)
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 每天 2:00 执行
+  workflow_dispatch:  # 允许手动触发
 
-links = [
-    "https://raw.githubusercontent.com/wuqb2i4f/xray-config-toolkit/main/output/base64/mix",
-    "https://raw.githubusercontent.com/yebekhe/TelegramV2rayCollector/main/sub/base64/mix",
-    "https://raw.githubusercontent.com/mfuu/v2ray/master/v2ray",
-    "https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/Eternity",
-    "https://raw.githubusercontent.com/Leon406/SubCrawler/master/sub/share/vless",
-    "https://raw.githubusercontent.com/a2470982985/getNode/main/v2ray.txt"
-]
+permissions:
+  contents: write  # 确保有推送权限
 
-all_data = ""
-for link in links:
-    response = requests.get(link)
-    all_data += response.text
+jobs:
+  update_v2ray:
+    runs-on: ubuntu-latest
 
-# 解码 Base64
-decoded_data = base64.b64decode(all_data).decode('utf-8')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 确保检出完整历史
 
-valid_addresses = []
-for line in decoded_data.splitlines():
-    try:
-        # Ping 地址
-        subprocess.run(["ping", "-c", "1", line], check=True)
-        valid_addresses.append(line)
-    except subprocess.CalledProcessError:
-        continue
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
 
-# 保存有效地址到 json/v2ray.new 文件
-with open('json/v2ray.new', 'w') as f:
-    f.write('\n'.join(valid_addresses))
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run process_v2ray.py
+        run: |
+          python python/process_v2ray.py  # 确保替换为您的脚本路径
+
+      - name: Check if v2ray file was updated
+        run: |
+          if git diff --exit-code json/v2ray; then
+            echo "No changes to json/v2ray"
+            echo "changed=false" >> $GITHUB_ENV  # 使用环境文件设置输出变量
+          else
+            echo "Changes detected in json/v2ray"
+            echo "changed=true" >> $GITHUB_ENV
+          fi
+
+      - name: Commit and push changes
+        if: env.changed == 'true'
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+          git add json/v2ray
+          git commit -m 'Update V2Ray subscription file' || echo "No changes to commit."
+          git push origin main || echo "Push failed; may be due to permissions or branch protection."
