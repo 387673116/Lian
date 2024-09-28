@@ -2,9 +2,8 @@ name: V2Ray Subscription Update
 
 on:
   schedule:
-    - cron: '0 1 * * *'  # 每小时执行一次
-    workflow_dispatch:  # 允许手动触发
-
+    - cron: '0 * * * *'  # 每小时执行一次
+  workflow_dispatch:  # 允许手动触发
 
 jobs:
   update:
@@ -25,7 +24,7 @@ jobs:
 
       - name: Run V2Ray processing script
         run: |
-          python3 process_v2ray.py
+          python3 python/process_v2ray.py
 
       - name: Commit and push changes
         run: |
