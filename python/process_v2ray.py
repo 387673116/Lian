@@ -32,6 +32,6 @@ for line in decoded_data.splitlines():
     except subprocess.CalledProcessError:
         continue
 
-# 保存有效地址到 json/v2ray 文件
-with open('json/v2ray', 'w') as f:
+# 保存有效地址到 json/v2ray.new 文件
+with open('json/v2ray.new', 'w') as f:
     f.write('\n'.join(valid_addresses))
