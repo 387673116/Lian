@@ -1,138 +1,43 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>相册系统 - 瀑布流</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: "Segoe UI", Arial, sans-serif;
-      background: #f5f5f5;
-      color: #333;
-    }
-    header {
-      background: #333;
-      color: #fff;
-      padding: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 1.2rem;
-    }
-    .filters {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-    .filters button {
-      padding: 0.4rem 0.8rem;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      background: #555;
-      color: white;
-      transition: background 0.3s;
-    }
-    .filters button.active,
-    .filters button:hover {
-      background: #f90;
-    }
-    #search {
-      padding: 0.4rem 0.8rem;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      min-width: 160px;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>相册系统 - 首页分段瀑布流</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f5f5f5;color:#333;}
+header{background:#333;color:#fff;padding:1rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;}
+header h1{margin:0;font-size:1.2rem;}
+.filters{display:flex;gap:0.5rem;flex-wrap:wrap;}
+.filters button{padding:0.4rem 0.8rem;border:none;border-radius:4px;cursor:pointer;background:#555;color:white;transition:background 0.3s;}
+.filters button.active,.filters button:hover{background:#f90;}
+#search{padding:0.4rem 0.8rem;border-radius:4px;border:1px solid #ccc;min-width:160px;}
 
-    main {
-      padding: 1rem;
-    }
-    .masonry {
-      display: flex;
-      gap: 16px;
-      align-items: flex-start;
-    }
-    .col {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .card {
-      background: #fff;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      transition: transform 0.2s;
-    }
-    .card:hover { transform: translateY(-3px); }
-    .thumb { width: 100%; display: block; }
-    .meta { padding: 0.5rem; font-size: 0.9rem; display:flex; justify-content:space-between; }
-    .meta .cat { color:#666; font-size:0.8rem; }
+main{padding:1rem;}
+.section-title{margin:1rem 0 0.5rem;font-weight:bold;font-size:1.1rem;}
+.masonry{display:flex;gap:16px;align-items:flex-start;margin-bottom:24px;}
+.col{flex:1;display:flex;flex-direction:column;gap:16px;}
+.card{background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 5px rgba(0,0,0,0.1);transition:transform 0.2s;}
+.card:hover{transform:translateY(-3px);}
+.card img{width:100%;display:block;}
+.card .meta{padding:0.5rem;font-size:0.9rem;display:flex;justify-content:space-between;}
+.card .meta .cat{color:#666;font-size:0.8rem;}
+.empty{text-align:center;color:#777;margin-top:2rem;}
 
-    .empty {
-      text-align: center;
-      color: #777;
-      margin-top: 2rem;
-    }
-
-    /* Lightbox */
-    .lightbox {
-      position: fixed;
-      top:0; left:0; right:0; bottom:0;
-      background: rgba(0,0,0,0.85);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
-      flex-direction: column;
-      color: #fff;
-    }
-    .lightbox img {
-      max-width: 90%;
-      max-height: 80%;
-      border-radius: 8px;
-    }
-    .lightbox .caption {
-      margin-top: 1rem;
-      font-size: 1rem;
-    }
-    .lightbox .close {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: none;
-      border: none;
-      color: white;
-      font-size: 2rem;
-      cursor: pointer;
-    }
-    .lightbox .nav {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 2rem;
-      background:none;
-      border:none;
-      color:white;
-      cursor:pointer;
-    }
-    .lightbox .prev { left:1rem; }
-    .lightbox .next { right:1rem; }
-
-    @media(max-width:768px){
-      .masonry{ gap:8px; }
-      .meta{ font-size:0.8rem; }
-    }
-  </style>
+/* Lightbox */
+.lightbox{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:999;flex-direction:column;color:#fff;}
+.lightbox img{max-width:90%;max-height:80%;border-radius:8px;}
+.lightbox .caption{margin-top:1rem;font-size:1rem;}
+.lightbox .close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:white;font-size:2rem;cursor:pointer;}
+.lightbox .nav{position:absolute;top:50%;transform:translateY(-50%);font-size:2rem;background:none;border:none;color:white;cursor:pointer;}
+.lightbox .prev{left:1rem;} .lightbox .next{right:1rem;}
+@media(max-width:1024px){.col{flex:1;}}
+@media(max-width:768px){.col{flex:1;}}
+@media(max-width:480px){.col{flex:1;}}
+</style>
 </head>
 <body>
+
 <header>
   <h1>我的相册</h1>
   <div class="filters">
@@ -141,142 +46,121 @@
     <button data-cat="闪图">闪图</button>
     <button data-cat="背景图">背景图</button>
   </div>
-  <input id="search" type="search" placeholder="搜索..." />
+  <input id="search" type="search" placeholder="搜索...">
 </header>
-<main>
-  <section id="masonry" class="masonry" aria-live="polite">
-    <div class="col" id="col-1"></div>
-    <div class="col" id="col-2"></div>
-    <div class="col" id="col-3"></div>
-    <div class="col" id="col-4"></div>
-  </section>
+
+<main id="main-content">
   <div id="empty" class="empty" style="display:none">没有匹配的图片</div>
 </main>
 
 <div id="lightbox" class="lightbox">
   <button class="close" onclick="closeLightbox()">×</button>
   <button class="nav prev" onclick="navLightbox(-1)">‹</button>
-  <img id="lightbox-img" src="" alt="" />
+  <img id="lightbox-img" src="" alt="">
   <div id="lightbox-caption" class="caption"></div>
   <button class="nav next" onclick="navLightbox(1)">›</button>
 </div>
 
 <script>
-  /*********** 动态生成图片数据 ***********/
-  const images = [];
-  // 卡通
-  for (let i=1;i<=60;i++){
-    images.push({id:`cartoon-${i}`,category:"卡通",title:`卡通 ${i}`,src:`avatar/cartoon/${i}.jpg`});
-  }
-  // 闪图
-  for (let i=1;i<=209;i++){
-    images.push({id:`flash-${i}`,category:"闪图",title:`闪图 ${i}`,src:`avatar/flash/${i}.gif`});
-  }
-  // 背景图（假设 1~100.jpg）
-  for (let i=1;i<=100;i++){
-    images.push({id:`bg-${i}`,category:"背景图",title:`背景图 ${i}`,src:`avatar/background/${i}.jpg`});
-  }
+// 图片数据
+const images=[];
+for(let i=1;i<=60;i++){ images.push({id:`cartoon-${i}`,category:"卡通",title:`卡通 ${i}`,src:`/avatar/cartoon/${i}.j`}); }
+for(let i=1;i<=209;i++){ images.push({id:`flash-${i}`,category:"闪图",title:`闪图 ${i}`,src:`/avatar/flash/${i}.gif`}); }
+for(let i=1;i<=100;i++){ images.push({id:`bg-${i}`,category:"背景图",title:`背景图 ${i}`,src:`/avatar/background/${i}.jpg`}); }
 
-  /*********** 变量 ***********/
-  let activeCat="全部";
-  let query="";
-  let visible=[];
-  let currentIndex=0;
-  let page=0;
-  const pageSize=40;
-  const emptyEl=document.getElementById('empty');
+// 状态
+let activeCat="全部", query="", pageSize=40, currentIndex=0;
+const mainContent=document.getElementById("main-content");
+const emptyEl=document.getElementById("empty");
 
-  /*********** 渲染 ***********/
-  function render(reset=true){
-    const q=query.trim().toLowerCase();
-    visible = images.filter(i => (activeCat==="全部" ? true : i.category===activeCat))
-                    .filter(i => i.title.toLowerCase().includes(q));
-    if(reset){
-      page=0;
-      for(let c=1;c<=4;c++) document.getElementById(`col-${c}`).innerHTML="";
-    }
-    if(visible.length===0){
-      emptyEl.style.display="block";
-      return;
-    }
-    emptyEl.style.display="none";
-    const start=page*pageSize;
-    const end=start+pageSize;
-    const batch=visible.slice(start,end);
+// 存储每个分类加载页码
+const pageMap={ "卡通":0, "闪图":0, "背景图":0 };
 
-    batch.forEach((img,idx)=>{
-      const globalIdx=start+idx;
-      const fig=document.createElement("figure");
-      fig.className="card";
-      fig.tabIndex=0;
-      fig.setAttribute("data-idx",globalIdx);
+// 存储每个分类对应列
+const colsMap={};
 
-      const imgEl=document.createElement("img");
-      imgEl.className="thumb";
-      imgEl.src=img.src;
-      imgEl.loading="lazy";
-      imgEl.alt=img.title;
-      imgEl.onclick=()=>openLightbox(globalIdx);
+// 渲染首页分段
+function renderHome(reset=true){
+  if(reset){ mainContent.innerHTML=""; emptyEl.style.display="none"; }
+  const cats=(activeCat==="全部")?["卡通","闪图","背景图"]:[activeCat];
+  cats.forEach(cat=>{
+    // 分类标题
+    const title=document.createElement("div"); title.className="section-title"; title.textContent=cat;
+    mainContent.appendChild(title);
+    // 瀑布流容器
+    const masonry=document.createElement("div"); masonry.className="masonry"; masonry.id=`masonry-${cat}`;
+    mainContent.appendChild(masonry);
+    // 创建4列
+    const cols=[];
+    for(let c=1;c<=4;c++){ const col=document.createElement("div"); col.className="col"; masonry.appendChild(col); cols.push(col); }
+    colsMap[cat]=cols;
+    // 先渲染第一页
+    renderBatch(cat,true);
+  });
+}
 
-      const meta=document.createElement("figcaption");
-      meta.className="meta";
-      meta.innerHTML=`<div>${img.title}</div><div class="cat">${img.category}</div>`;
+// 渲染指定分类一批图片
+function renderBatch(cat,reset=false){
+  const q=query.trim().toLowerCase();
+  const list=images.filter(i=>i.category===cat).filter(i=>i.title.toLowerCase().includes(q));
+  if(list.length===0){ emptyEl.style.display="block"; return; } else emptyEl.style.display="none";
+  if(reset){ pageMap[cat]=0; colsMap[cat].forEach(col=>col.innerHTML=""); }
+  const start=pageMap[cat]*pageSize, end=start+pageSize, batch=list.slice(start,end);
+  batch.forEach((img,idx)=>{
+    const globalIdx=start+idx;
+    const fig=document.createElement("div"); fig.className="card";
+    const imgEl=document.createElement("img"); imgEl.src=img.src; imgEl.alt=img.title; imgEl.loading="lazy"; imgEl.onclick=()=>openLightbox(images.indexOf(img));
+    const meta=document.createElement("div"); meta.className="meta"; meta.innerHTML=`<div>${img.title}</div><div class="cat">${img.category}</div>`;
+    fig.appendChild(imgEl); fig.appendChild(meta);
+    const colNum=globalIdx%4; colsMap[cat][colNum].appendChild(fig);
+  });
+  pageMap[cat]++;
+}
 
-      fig.appendChild(imgEl);
-      fig.appendChild(meta);
-
-      const colNum=(globalIdx%4)+1;
-      document.getElementById(`col-${colNum}`).appendChild(fig);
-    });
-    page++;
-  }
-
-  /*********** 滚动加载 ***********/
-  window.addEventListener("scroll",()=>{
+// 滚动加载更多
+window.addEventListener("scroll",()=>{
+  const cats=(activeCat==="全部")?["卡通","闪图","背景图"]:[activeCat];
+  cats.forEach(cat=>{
+    const list=images.filter(i=>i.category===cat).filter(i=>i.title.toLowerCase().includes(query.trim().toLowerCase()));
     if(window.innerHeight+window.scrollY>=document.body.offsetHeight-200){
-      if(page*pageSize<visible.length){ render(false); }
+      if(pageMap[cat]*pageSize<list.length) renderBatch(cat,false);
     }
   });
+});
 
-  /*********** 分类按钮 ***********/
-  document.querySelectorAll(".filters button").forEach(btn=>{
-    btn.onclick=()=>{
-      document.querySelectorAll(".filters button").forEach(b=>b.classList.remove("active"));
-      btn.classList.add("active");
-      activeCat=btn.getAttribute("data-cat");
-      render(true);
-    };
-  });
+// 分类按钮
+document.querySelectorAll(".filters button").forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll(".filters button").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    activeCat=btn.dataset.cat;
+    query=""; document.getElementById("search").value="";
+    renderHome(true);
+  };
+});
 
-  /*********** 搜索框 ***********/
-  document.getElementById("search").addEventListener("input",e=>{
-    query=e.target.value;
-    render(true);
-  });
+// 搜索
+document.getElementById("search").addEventListener("input",e=>{
+  query=e.target.value;
+  renderHome(true);
+});
 
-  /*********** Lightbox ***********/
-  function openLightbox(idx){
-    currentIndex=idx;
-    const item=visible[idx];
-    document.getElementById("lightbox-img").src=item.src;
-    document.getElementById("lightbox-caption").textContent=item.title+" ("+item.category+")";
-    document.getElementById("lightbox").style.display="flex";
+// Lightbox
+let currentIndex=0;
+function openLightbox(idx){currentIndex=idx; const item=images[idx]; document.getElementById("lightbox-img").src=item.src; document.getElementById("lightbox-caption").textContent=item.title+" ("+item.category+")"; document.getElementById("lightbox").style.display="flex";}
+function closeLightbox(){document.getElementById("lightbox").style.display="none";}
+function navLightbox(dir){currentIndex=(currentIndex+dir+images.length)%images.length; openLightbox(currentIndex);}
+window.addEventListener("keydown",e=>{
+  if(document.getElementById("lightbox").style.display==="flex"){
+    if(e.key==="ArrowRight") navLightbox(1);
+    if(e.key==="ArrowLeft") navLightbox(-1);
+    if(e.key==="Escape") closeLightbox();
   }
-  function closeLightbox(){ document.getElementById("lightbox").style.display="none"; }
-  function navLightbox(dir){
-    currentIndex=(currentIndex+dir+visible.length)%visible.length;
-    openLightbox(currentIndex);
-  }
-  window.addEventListener("keydown",e=>{
-    if(document.getElementById("lightbox").style.display==="flex"){
-      if(e.key==="ArrowRight") navLightbox(1);
-      if(e.key==="ArrowLeft") navLightbox(-1);
-      if(e.key==="Escape") closeLightbox();
-    }
-  });
+});
 
-  /*********** 初始化 ***********/
-  render(true);
+// 初始化
+renderHome(true);
 </script>
+
 </body>
 </html>
