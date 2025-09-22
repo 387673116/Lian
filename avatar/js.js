@@ -22,12 +22,21 @@ function shuffleArray(array){
 // 渲染批量
 function renderBatch(reset=true){
   const q=query.trim().toLowerCase();
-  visible=images
+  visible = images
     .filter(i => activeCat==="全部" ? true : i.category===activeCat)
     .filter(i => i.title.toLowerCase().includes(q));
 
-  // 首页随机打乱显示
-  visible = shuffleArray(visible);
+  // 首页或全部分类随机排列，其它分类按顺序
+  if(activeCat==="全部"){
+    visible = shuffleArray(visible);
+  } else {
+    // 按图片名称顺序排序（假设 src 最后部分的数字可排序）
+    visible.sort((a,b)=>{
+      const numA = parseInt(a.src.match(/(\d+)\.(jpg|gif)$/)[1],10);
+      const numB = parseInt(b.src.match(/(\d+)\.(jpg|gif)$/)[1],10);
+      return numA - numB;
+    });
+  }
 
   if(reset){ 
     page=0; 
@@ -48,6 +57,7 @@ function renderBatch(reset=true){
   });
   page++;
 }
+
 
 // 滚动加载更多
 window.addEventListener("scroll",()=>{
