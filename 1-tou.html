@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>快乐头像</title>
+<link rel="stylesheet" type="text/css" href="avatar/css.css" />
+</head>
+<body>
+<header>
+  <h1>我的相册</h1>
+  <div class="filters">
+    <button data-cat="全部" class="active">全部</button>
+    <button data-cat="卡通">卡通</button>
+    <button data-cat="闪图">闪图</button>
+    <button data-cat="背景图">背景图</button>
+  </div>
+  <input id="search" type="search" placeholder="按名称序列号搜索">
+</header>
+
+<main>
+  <div class="masonry" id="masonry"></div>
+  <div id="empty" class="empty" style="display:none">没有匹配的图片</div>
+</main>
+
+<div id="lightbox" class="lightbox">
+  <button class="close" onclick="closeLightbox()">×</button>
+  <button class="nav prev" onclick="navLightbox(-1)">‹</button>
+  <img id="lightbox-img" src="" alt="">
+  <div id="lightbox-caption" class="caption"></div>
+  <button class="nav next" onclick="navLightbox(1)">›</button>
+</div>
+<script src="avatar/js.js" type="text/javascript"></script>
+</body>
+</html>
