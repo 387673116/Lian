@@ -1,2 +1,0 @@
-wx=https://img-s-msn-com.akamaized.net/tenant/amp/entityid/AA1uQiRl.img&ali=https://img-s-msn-com.akamaized.net/tenant/amp/entityid/AA1uOeNq.img
-wx=https://img-s-msn-com.akamaized.net/tenant/amp/entityid/AA1uPtyL.img&ali=https://img-s-msn-com.akamaized.net/tenant/amp/entityid/AA1uPzkG.img
