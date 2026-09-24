@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iOS Web Clip配置生成器</title>
+    <style>
+        :root {
+            --primary: #0088ff;
+            --secondary: #f0f8ff;
+            --border: #d1e7ff;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+            font-weight: 600;
+        }
+        .form-section {
+            padding: 25px;
+            border-bottom: 1px solid var(--border);
+        }
+        h2 {
+            color: var(--primary);
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 120px;
+            font-family: monospace;
+            resize: vertical;
+        }
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            display: inline-block;
+            transition: background 0.2s;
+            margin: 4px;
+        }
+        .btn:hover {
+            background: #0066cc;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-container {
+            text-align: center;
+            padding: 20px;
+        }
+        .output-section {
+            padding: 25px;
+            background: var(--secondary);
+        }
+        .output-box {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            overflow-x: auto;
+        }
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .instructions {
+            background: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .hint {
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+            margin: 0 0 12px;
+        }
+        .status {
+            text-align: center;
+            font-size: 14px;
+            color: #0066cc;
+            min-height: 20px;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>iOS Web Clip配置生成器</h1>
+        </header>
+        
+        <div class="form-section">
+            <h2>基本配置</h2>
+            <div class="form-group">
+                <label for="appName">应用名称 (Label):</label>
+                <input type="text" id="appName" placeholder="例如：腾讯新闻">
+            </div>
+            <div class="form-group">
+                <label for="url">网页链接 (URL):</label>
+                <input type="url" id="url" placeholder="https://www.example.com">
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h2>图标设置</h2>
+            <div class="form-group">
+                <label for="iconFile">选择图标文件 (PNG格式):</label>
+                <input type="file" id="iconFile" accept=".png">
+            </div>
+            <div class="instructions">
+                <strong>图标要求：</strong>
+                <ul>
+                    <li>推荐尺寸：180×180像素</li>
+                    <li>必须是PNG格式</li>
+                    <li>透明背景效果最佳</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h2>高级设置</h2>
+            <div class="form-group">
+                <label for="description">描述文件描述 (PayloadDescription):</label>
+                <input type="text" id="description" placeholder="例如：公司内部应用">
+            </div>
+            <div class="form-group">
+                <label for="displayName">描述文件名称 (PayloadDisplayName):</label>
+                <input type="text" id="displayName" placeholder="例如：企业Web应用">
+            </div>
+            <div class="form-group">
+                <label for="identifier">标识符 (PayloadIdentifier):</label>
+                <input type="text" id="identifier" placeholder="例如：com.company.webapp">
+            </div>
+        </div>
+        
+        <div class="btn-container">
+            <button class="btn" id="generateBtn">生成配置文件</button>
+        </div>
+        
+        <div class="output-section">
+            <h2>生成的配置文件</h2>
+            <div class="output-box">
+                <pre id="output">填写上方表单并点击生成按钮</pre>
+            </div>
+            <p class="hint">在 https 站点或 localhost 打开时，点「下载」可直接选文件夹保存；其他环境走普通下载。</p>
+            <div class="btn-container">
+                <button class="btn" id="downloadBtn" disabled>下载 .mobileconfig 文件</button>
+                <button class="btn" id="copyBtn" disabled>复制配置文本</button>
+            </div>
+            <p class="status" id="status"></p>
+        </div>
+    </div>
+
+    <script>
+        // 缓存常用元素，避免重复查询 DOM
+        const els = {
+            appName: document.getElementById('appName'),
+            url: document.getElementById('url'),
+            description: document.getElementById('description'),
+            displayName: document.getElementById('displayName'),
+            identifier: document.getElementById('identifier'),
+            iconFile: document.getElementById('iconFile'),
+            output: document.getElementById('output'),
+            generateBtn: document.getElementById('generateBtn'),
+            downloadBtn: document.getElementById('downloadBtn'),
+            copyBtn: document.getElementById('copyBtn'),
+            statusEl: document.getElementById('status'),
+        };
+
+        els.generateBtn.addEventListener('click', generateConfig);
+        els.downloadBtn.addEventListener('click', downloadConfig);
+        els.copyBtn.addEventListener('click', copyConfig);
+
+        function setStatus(msg) {
+            els.statusEl.textContent = msg;
+        }
+
+        // XML 转义：用户输入含 & < > 时（带查询参数的 URL 最易踩坑）会导致 plist 损坏
+        function escapeXml(s) {
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        // 生成 RFC 4122 v4 UUID（自定义实现，兼容 file:// 等非安全上下文）
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0,
+                    v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        function generateConfig() {
+            const appName = els.appName.value.trim() || '我的Web应用';
+            const url = els.url.value.trim() || 'https://www.example.com';
+            const description = els.description.value.trim() || 'Web Clip描述文件';
+            const displayName = els.displayName.value.trim() || 'Web应用配置';
+            const identifier = els.identifier.value.trim() || 'com.example.webclip';
+
+            const fileInput = els.iconFile;
+            if (fileInput.files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const iconData = (e.target.result.split(',')[1]) || '';
+                    createConfig(appName, url, description, displayName, identifier, iconData);
+                };
+                reader.onerror = function() {
+                    els.output.textContent = '图标读取失败，请重新选择文件';
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                createConfig(appName, url, description, displayName, identifier, '');
+            }
+        }
+
+        function createConfig(appName, url, description, displayName, identifier, iconData) {
+            const outerUUID = generateUUID();
+            const innerUUID = generateUUID();
+
+            // 没有图标时省略 Icon 键，避免生成无效的 <data></data>
+            const iconBlock = iconData
+                ? '            <key>Icon</key>\n            <data>' + iconData + '</data>\n'
+                : '';
+
+            const config =
+'<?xml version="1.0" encoding="UTF-8"?>\n' +
+'<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n' +
+'<plist version="1.0">\n' +
+'<dict>\n' +
+'    <key>PayloadContent</key>\n' +
+'    <array>\n' +
+'        <dict>\n' +
+'            <key>FullScreen</key>\n' +
+'            <true/>\n' +
+iconBlock +
+'            <key>IsRemovable</key>\n' +
+'            <true/>\n' +
+'            <key>Label</key>\n' +
+'            <string>' + escapeXml(appName) + '</string>\n' +
+'            <key>PayloadDescription</key>\n' +
+'            <string>' + escapeXml(description) + '</string>\n' +
+'            <key>PayloadDisplayName</key>\n' +
+'            <string>' + escapeXml(displayName) + '</string>\n' +
+'            <key>PayloadIdentifier</key>\n' +
+'            <string>' + escapeXml(identifier) + '.config</string>\n' +
+'            <key>PayloadType</key>\n' +
+'            <string>com.apple.webClip.managed</string>\n' +
+'            <key>PayloadUUID</key>\n' +
+'            <string>' + innerUUID + '</string>\n' +
+'            <key>PayloadVersion</key>\n' +
+'            <integer>1</integer>\n' +
+'            <key>Precomposed</key>\n' +
+'            <true/>\n' +
+'            <key>URL</key>\n' +
+'            <string>' + escapeXml(url) + '</string>\n' +
+'        </dict>\n' +
+'    </array>\n' +
+'    <key>PayloadDescription</key>\n' +
+'    <string>' + escapeXml(description) + '</string>\n' +
+'    <key>PayloadDisplayName</key>\n' +
+'    <string>' + escapeXml(displayName) + '</string>\n' +
+'    <key>PayloadIdentifier</key>\n' +
+'    <string>' + escapeXml(identifier) + '.package</string>\n' +
+'    <key>PayloadRemovalDisallowed</key>\n' +
+'    <false/>\n' +
+'    <key>PayloadType</key>\n' +
+'    <string>Configuration</string>\n' +
+'    <key>PayloadUUID</key>\n' +
+'    <string>' + outerUUID + '</string>\n' +
+'    <key>PayloadVersion</key>\n' +
+'    <integer>1</integer>\n' +
+'</dict>\n' +
+'</plist>';
+
+            els.output.textContent = config;
+            els.downloadBtn.disabled = false;
+            els.copyBtn.disabled = false;
+            setStatus('配置已生成，可下载或直接复制');
+        }
+
+        function safeFileName() {
+            const raw = (els.identifier.value.trim() || els.appName.value.trim() || 'webclip');
+            return raw.replace(/[^a-zA-Z0-9._-]/g, '_');
+        }
+
+        function downloadConfig() {
+            const config = els.output.textContent;
+            if (!config) return;
+            const fileName = safeFileName() + '.mobileconfig';
+
+            // https/localhost 下优先用 File System Access API，可直接选本地文件夹落盘
+            if (typeof window.showSaveFilePicker === 'function') {
+                saveWithPicker(config, fileName).catch(function(err) {
+                    if (err && err.name === 'AbortError') return; // 用户取消，静默忽略
+                    console.error(err);
+                    fallbackDownload(config, fileName);
+                });
+                return;
+            }
+            fallbackDownload(config, fileName);
+        }
+
+        async function saveWithPicker(config, fileName) {
+            const handle = await window.showSaveFilePicker({
+                suggestedName: fileName,
+                types: [{
+                    description: 'Apple 配置描述文件',
+                    accept: { 'application/x-apple-aspen-config': ['.mobileconfig'] }
+                }]
+            });
+            const writable = await handle.createWritable();
+            await writable.write(config);
+            await writable.close();
+            setStatus('✅ 已保存：' + handle.name);
+        }
+
+        function fallbackDownload(config, fileName) {
+            const blob = new Blob([config], { type: 'application/x-apple-aspen-config' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            setStatus('✅ 已触发下载：' + fileName + '（若未弹出，请检查浏览器下载设置）');
+        }
+
+        function copyConfig() {
+            const config = els.output.textContent;
+            if (!config) return;
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(config).then(
+                    function() { setStatus('✅ 已复制到剪贴板'); },
+                    function() { legacyCopy(config); }
+                );
+            } else {
+                legacyCopy(config);
+            }
+        }
+
+        function legacyCopy(config) {
+            const ta = document.createElement('textarea');
+            ta.value = config;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.top = '-1000px';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            let ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+            document.body.removeChild(ta);
+            setStatus(ok ? '✅ 已复制到剪贴板' : '⚠️ 复制失败，请手动框选上方文本复制');
+        }
+    </script>
+</body>
+</html>
