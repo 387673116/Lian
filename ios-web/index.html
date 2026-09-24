@@ -57,11 +57,6 @@
             font-size: 16px;
             box-sizing: border-box;
         }
-        textarea {
-            min-height: 120px;
-            font-family: monospace;
-            resize: vertical;
-        }
         .btn {
             background: var(--primary);
             color: white;
@@ -85,23 +80,6 @@
             text-align: center;
             padding: 20px;
         }
-        .output-section {
-            padding: 25px;
-            background: var(--secondary);
-        }
-        .output-box {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 15px;
-            overflow-x: auto;
-        }
-        pre {
-            margin: 0;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
         .instructions {
             background: #fff8e1;
             border-left: 4px solid #ffc107;
@@ -109,18 +87,15 @@
             margin: 20px 0;
             border-radius: 0 4px 4px 0;
         }
-        .hint {
-            text-align: center;
-            font-size: 12px;
-            color: #888;
-            margin: 0 0 12px;
-        }
         .status {
             text-align: center;
-            font-size: 14px;
+            font-size: 15px;
             color: #0066cc;
-            min-height: 20px;
+            min-height: 22px;
             margin: 0;
+        }
+        .status.error {
+            color: #d32f2f;
         }
     </style>
 </head>
@@ -129,7 +104,7 @@
         <header>
             <h1>iOS Web Clip配置生成器</h1>
         </header>
-        
+
         <div class="form-section">
             <h2>基本配置</h2>
             <div class="form-group">
@@ -141,7 +116,7 @@
                 <input type="url" id="url" placeholder="https://www.example.com">
             </div>
         </div>
-        
+
         <div class="form-section">
             <h2>图标设置</h2>
             <div class="form-group">
@@ -157,7 +132,7 @@
                 </ul>
             </div>
         </div>
-        
+
         <div class="form-section">
             <h2>高级设置</h2>
             <div class="form-group">
@@ -173,22 +148,17 @@
                 <input type="text" id="identifier" placeholder="例如：com.company.webapp">
             </div>
         </div>
-        
+
         <div class="btn-container">
             <button class="btn" id="generateBtn">生成配置文件</button>
         </div>
-        
-        <div class="output-section">
-            <h2>生成的配置文件</h2>
-            <div class="output-box">
-                <pre id="output">填写上方表单并点击生成按钮</pre>
-            </div>
-            <p class="hint">在 https 站点或 localhost 打开时，点「下载」可直接选文件夹保存；其他环境走普通下载。</p>
+
+        <div class="form-section">
+            <h2>生成结果</h2>
+            <p class="status" id="status">填写上方表单并点击「生成配置文件」</p>
             <div class="btn-container">
                 <button class="btn" id="downloadBtn" disabled>下载 .mobileconfig 文件</button>
-                <button class="btn" id="copyBtn" disabled>复制配置文本</button>
             </div>
-            <p class="status" id="status"></p>
         </div>
     </div>
 
@@ -201,19 +171,20 @@
             displayName: document.getElementById('displayName'),
             identifier: document.getElementById('identifier'),
             iconFile: document.getElementById('iconFile'),
-            output: document.getElementById('output'),
             generateBtn: document.getElementById('generateBtn'),
             downloadBtn: document.getElementById('downloadBtn'),
-            copyBtn: document.getElementById('copyBtn'),
             statusEl: document.getElementById('status'),
         };
 
+        let lastConfig = '';   // 生成的配置内容（不展示，仅用于下载）
+        let lastName = '';     // 生成的文件名
+
         els.generateBtn.addEventListener('click', generateConfig);
         els.downloadBtn.addEventListener('click', downloadConfig);
-        els.copyBtn.addEventListener('click', copyConfig);
 
-        function setStatus(msg) {
+        function setStatus(msg, isError) {
             els.statusEl.textContent = msg;
+            els.statusEl.classList.toggle('error', !!isError);
         }
 
         // XML 转义：用户输入含 & < > 时（带查询参数的 URL 最易踩坑）会导致 plist 损坏
@@ -248,7 +219,7 @@
                     createConfig(appName, url, description, displayName, identifier, iconData);
                 };
                 reader.onerror = function() {
-                    els.output.textContent = '图标读取失败，请重新选择文件';
+                    setStatus('⚠️ 图标读取失败，请重新选择文件', true);
                 };
                 reader.readAsDataURL(fileInput.files[0]);
             } else {
@@ -315,88 +286,31 @@ iconBlock +
 '</dict>\n' +
 '</plist>';
 
-            els.output.textContent = config;
+            lastConfig = config;
+            lastName = safeFileName(appName) + '.mobileconfig';
             els.downloadBtn.disabled = false;
-            els.copyBtn.disabled = false;
-            setStatus('配置已生成，可下载或直接复制');
+            setStatus('✅ 配置已生成：' + lastName + '，点下方按钮即可下载');
         }
 
-        function safeFileName() {
-            const raw = (els.identifier.value.trim() || els.appName.value.trim() || 'webclip');
-            return raw.replace(/[^a-zA-Z0-9._-]/g, '_');
+        // 文件名 = 应用名称（保留中文，仅剔除文件系统非法字符）
+        function safeFileName(name) {
+            const raw = (name && name.trim()) || 'webclip';
+            return raw.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_');
         }
 
+        // 直接下载：点一下立即触发，文件名用应用名称（不弹文件夹选择器、不展示代码）
         function downloadConfig() {
-            const config = els.output.textContent;
-            if (!config) return;
-            const fileName = safeFileName() + '.mobileconfig';
-
-            // https/localhost 下优先用 File System Access API，可直接选本地文件夹落盘
-            if (typeof window.showSaveFilePicker === 'function') {
-                saveWithPicker(config, fileName).catch(function(err) {
-                    if (err && err.name === 'AbortError') return; // 用户取消，静默忽略
-                    console.error(err);
-                    fallbackDownload(config, fileName);
-                });
-                return;
-            }
-            fallbackDownload(config, fileName);
-        }
-
-        async function saveWithPicker(config, fileName) {
-            const handle = await window.showSaveFilePicker({
-                suggestedName: fileName,
-                types: [{
-                    description: 'Apple 配置描述文件',
-                    accept: { 'application/x-apple-aspen-config': ['.mobileconfig'] }
-                }]
-            });
-            const writable = await handle.createWritable();
-            await writable.write(config);
-            await writable.close();
-            setStatus('✅ 已保存：' + handle.name);
-        }
-
-        function fallbackDownload(config, fileName) {
-            const blob = new Blob([config], { type: 'application/x-apple-aspen-config' });
-            const url = URL.createObjectURL(blob);
+            if (!lastConfig) return;
+            const blob = new Blob([lastConfig], { type: 'application/x-apple-aspen-config' });
+            const objUrl = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
+            a.href = objUrl;
+            a.download = lastName;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            setStatus('✅ 已触发下载：' + fileName + '（若未弹出，请检查浏览器下载设置）');
-        }
-
-        function copyConfig() {
-            const config = els.output.textContent;
-            if (!config) return;
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(config).then(
-                    function() { setStatus('✅ 已复制到剪贴板'); },
-                    function() { legacyCopy(config); }
-                );
-            } else {
-                legacyCopy(config);
-            }
-        }
-
-        function legacyCopy(config) {
-            const ta = document.createElement('textarea');
-            ta.value = config;
-            ta.setAttribute('readonly', '');
-            ta.style.position = 'fixed';
-            ta.style.top = '-1000px';
-            ta.style.opacity = '0';
-            document.body.appendChild(ta);
-            ta.focus();
-            ta.select();
-            let ok = false;
-            try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
-            document.body.removeChild(ta);
-            setStatus(ok ? '✅ 已复制到剪贴板' : '⚠️ 复制失败，请手动框选上方文本复制');
+            URL.revokeObjectURL(objUrl);
+            setStatus('✅ 已开始下载：' + lastName + '（默认保存到浏览器下载目录）');
         }
     </script>
 </body>
